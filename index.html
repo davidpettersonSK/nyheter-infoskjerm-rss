@@ -78,13 +78,16 @@ const url = 'https://spring-dew-1b91.david-tunsberg-petterson.workers.dev/';
 
     items.forEach((item, index) => {
       const title = item.querySelector("title")?.textContent || "";
-      const desc = item.querySelector("description")?.textContent || "";
+const desc = item.querySelector("description")?.textContent?.trim() || "";
+``
 
-      let image = "";
-      const enclosure = item.querySelector("enclosure");
-      if (enclosure && enclosure.getAttribute("url")) {
-        image = enclosure.getAttribute("url");
-      }
+     let image = "";
+const media = item.querySelector("media\\:content");
+
+if (media && media.getAttribute("url")) {
+  image = media.getAttribute("url");
+}
+``
 
       const div = document.createElement("div");
       div.classList.add("slide");
