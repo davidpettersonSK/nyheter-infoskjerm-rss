@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Infoskjerm</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 40px;
+  }
+
+  h1 {
+    font-size: 48px;
+    margin-bottom: 30px;
+  }
+
+  .item {
+    background: #1e293b;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  .title {
+    font-size: 28px;
+    font-weight: bold;
+  }
+
+  .desc {
+    font-size: 20px;
+    margin-top: 10px;
+  }
+</style>
+
+</head>
+<body>
+
+<h1>Informasjon</h1>
+<div id="feed"></div>
+
+<script>
+async function loadRSS() {
+  const response = await fetch('nyhets-feed.xml');
+  const text = await response.text();
+
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, "text/xml");
+
+  const items = xml.querySelectorAll("item");
+
+  const container = document.getElementById("feed");
+
+  items.forEach(item => {
+    const title = item.querySelector("title").textContent;
+    const desc = item.querySelector("description").textContent;
+
+    const div = document.createElement("div");
+    div.classList.add("item");
+
+    div.innerHTML = `
+      <div class="title">${title}</div>
+      <div class="desc">${desc}</div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+loadRSS();
+</script>
+
+</body>
+</html>
+``
