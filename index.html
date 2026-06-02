@@ -5,50 +5,47 @@
 <title>NRK Nyheter</title>
 
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-  }
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: Arial;
+}
 
-  .slide {
-    display: none;
-    height: 100vh;
-    width: 100vw;
-    position: relative;
-  }
+.slide {
+  display: none;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
 
-  .active {
-    display: block;
-  }
+.active {
+  display: block;
+}
 
-  .image {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.5;
-  }
+.image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+}
 
-  .content {
-    position: absolute;
-    bottom: 80px;
-    left: 60px;
-    right: 60px;
-  }
+.content {
+  position: absolute;
+  bottom: 60px;
+  left: 60px;
+  right: 60px;
+}
 
-  .title {
-    font-size: 60px;
-    font-weight: bold;
-  }
+.title {
+  font-size: 50px;
+}
 
-  .desc {
-    font-size: 30px;
-    margin-top: 20px;
-    max-width: 1000px;
-  }
+.desc {
+  font-size: 26px;
+  margin-top: 15px;
+}
 </style>
 
 </head>
@@ -57,68 +54,55 @@
 <div id="slides"></div>
 
 <script>
+
 let currentSlide = 0;
 let slides = [];
 
 async function loadRSS() {
-  try {
 
-const url = 'https://spring-dew-1b91.david-tunsberg-petterson.workers.dev/';
-``
+  const url = 'https://spring-dew-1b91.david-tunsberg-petterson.workers.dev/';
 
-    const response = await fetch(url);
-    const text = await response.text();
+  const response = await fetch(url);
+  const text = await response.text();
 
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, "text/xml");
 
-    const items = xml.querySelectorAll("item");
+  const items = xml.getElementsByTagName("item");
 
-    const container = document.getElementById("slides");
+  const container = document.getElementById("slides");
 
-    items.forEach((item, index) => {
-      const title = item.querySelector("title")?.textContent || "";
-const desc = item.querySelector("description")?.textContent?.trim() || "";
-``
+  for (let i = 0; i < items.length; i++) {
 
-     let image = "";
-const media = item.querySelector("media\\:content");
+    const item = items[i];
 
-if (media && media.getAttribute("url")) {
-  image = media.getAttribute("url");
-}
-``
+    const title = item.getElementsByTagName("title")[0].textContent;
+    const desc = item.getElementsByTagName("description")[0].textContent;
 
-      const div = document.createElement("div");
-      div.classList.add("slide");
-      if (index === 0) div.classList.add("active");
+    let image = "";
 
-      div.innerHTML = `
-        ${image ? `<img class="image" src="${iv class="content">
-          <div class="title">${title}</div>
-          <div class="desc">${stripHtml(desc)}</div>
-        </div>
-      `;
+    const media = item.getElementsByTagName("media:content")[0];
+    if (media) {
+      image = media.getAttribute("url");
+    }
 
-      container.appendChild(div);
-    });
+    const div = document.createElement("div");
+    div.classList.add("slide");
 
-    slides = document.querySelectorAll(".slide");
+    if (i === 0) div.classList.add("active");
 
-    startRotation();
+    div.innerHTML =
+      (image ? '<img class="image" src="' + image + '">' : '') +
+      '<div class="content">' +
+      '<div class="title">' + title + '</div>' +
+      '<div class="desc">' + desc + '</div>' +
+      '</div>';
 
-  } catch (e) {
-    document.body.innerHTML = "<div style='padding:40px;font-size:30px;'>Feil ved lasting av nyheter</div>";
+    container.appendChild(div);
   }
-}
 
-function stripHtml(html) {
-  const temp = document.createElement("div");
-  temp.innerHTML = html;
-  return temp.textContent || "";
-}
+  slides = document.querySelectorAll(".slide");
 
-function startRotation() {
   setInterval(() => {
     slides[currentSlide].classList.remove("active");
     currentSlide = (currentSlide + 1) % slides.length;
@@ -127,8 +111,8 @@ function startRotation() {
 }
 
 loadRSS();
+
 </script>
 
 </body>
 </html>
-``
