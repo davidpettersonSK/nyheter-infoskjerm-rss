@@ -62,7 +62,7 @@ let slides = [];
 
 async function loadRSS() {
   try {
-    const url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.nrk.no/toppsaker.rss');
+    const url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.aftenbladet.no/rss');
 
     const response = await fetch(url);
     const text = await response.text();
