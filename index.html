@@ -2,47 +2,57 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>Infoskjerm</title>
+<title>Nyheter</title>
 
 <style>
   body {
+    margin: 0;
     font-family: Arial, sans-serif;
     background: #0f172a;
     color: white;
-    margin: 0;
-    padding: 40px;
+    overflow: hidden;
   }
 
-  h1 {
-    font-size: 48px;
-    margin-bottom: 30px;
+  .slide {
+    display: none;
+    height: 100vh;
+    width: 100vw;
+    padding: 80px;
+    box-sizing: border-box;
   }
 
-  .item {
-    background: #1e293b;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 10px;
+  .active {
+    display: block;
   }
 
   .title {
-    font-size: 28px;
+    font-size: 64px;
     font-weight: bold;
+    margin-bottom: 40px;
   }
 
   .desc {
+    font-size: 40px;
+    line-height: 1.4;
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 40px;
     font-size: 20px;
-    margin-top: 10px;
+    opacity: 0.6;
   }
 </style>
 
 </head>
 <body>
 
-<h1>Informasjon</h1>
-<div id="feed"></div>
+<div id="slides"></div>
 
 <script>
+let currentSlide = 0;
+let slides = [];
+
 async function loadRSS() {
   const response = await fetch('nyhets-feed.xml');
   const text = await response.text();
@@ -51,28 +61,30 @@ async function loadRSS() {
   const xml = parser.parseFromString(text, "text/xml");
 
   const items = xml.querySelectorAll("item");
+  const container = document.getElementById("slides");
 
-  const container = document.getElementById("feed");
-
-  items.forEach(item => {
+  items.forEach((item, index) => {
     const title = item.querySelector("title").textContent;
     const desc = item.querySelector("description").textContent;
 
     const div = document.createElement("div");
-    div.classList.add("item");
+    div.classList.add("slide");
+
+    if (index === 0) div.classList.add("active");
 
     div.innerHTML = `
       <div class="title">${title}</div>
       <div class="desc">${desc}</div>
+      <div class="footer">Infoskjerm • ${new Date().toLocaleTimeString()}</div>
     `;
 
     container.appendChild(div);
   });
+
+  slides = document.querySelectorAll(".slide");
+
+  startRotation();
 }
 
-loadRSS();
-</script>
-
-</body>
-</html>
-``
+function startRotation() {
+  setInterval(() => {
