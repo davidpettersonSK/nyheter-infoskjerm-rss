@@ -29,7 +29,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.6;
+    opacity: 0.5;
   }
 
   .content {
@@ -40,18 +40,90 @@
   }
 
   .title {
-    font-size: 56px;
+    font-size: 60px;
     font-weight: bold;
   }
 
   .desc {
-    font-size: 28px;
+    font-size: 30px;
     margin-top: 20px;
     max-width: 1000px;
   }
+</style>
 
-  .source {
-    position: absolute;
-    top: 20px;
-    right: 40px;
-    font-size: 18px;
+</head>
+<body>
+
+<div id="slides"></div>
+
+<script>
+let currentSlide = 0;
+let slides = [];
+
+async function loadRSS() {
+  try {
+    const url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.nrk.no/toppsaker.rss');
+
+    const response = await fetch(url);
+    const text = await response.text();
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+
+    const items = xml.querySelectorAll("item");
+
+    const container = document.getElementById("slides");
+
+    items.forEach((item, index) => {
+      const title = item.querySelector("title")?.textContent || "";
+      const desc = item.querySelector("description")?.textContent || "";
+
+      let image = "";
+      const enclosure = item.querySelector("enclosure");
+      if (enclosure && enclosure.getAttribute("url")) {
+        image = enclosure.getAttribute("url");
+      }
+
+      const div = document.createElement("div");
+      div.classList.add("slide");
+      if (index === 0) div.classList.add("active");
+
+      div.innerHTML = `
+        ${image ? `<img class="image" src="${iv class="content">
+          <div class="title">${title}</div>
+          <div class="desc">${stripHtml(desc)}</div>
+        </div>
+      `;
+
+      container.appendChild(div);
+    });
+
+    slides = document.querySelectorAll(".slide");
+
+    startRotation();
+
+  } catch (e) {
+    document.body.innerHTML = "<div style='padding:40px;font-size:30px;'>Feil ved lasting av nyheter</div>";
+  }
+}
+
+function stripHtml(html) {
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  return temp.textContent || "";
+}
+
+function startRotation() {
+  setInterval(() => {
+    slides[currentSlide].classList.remove("active");
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add("active");
+  }, 8000);
+}
+
+loadRSS();
+</script>
+
+</body>
+</html>
+``
