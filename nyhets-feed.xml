@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Infoskjerm PPT</title>
+    <description>Beskjeder</description>
+    <link>https://dittnavn.pages.dev</link>
+
+    <item>
+      <title>Velkommen</title>
+      <description>Infoskjerm fungerer ✅</description>
+      <pubDate>Mon, 02 Jun 2026 09:00:00 GMT</pubDate>
+    </item>
+
+  </channel>
+</rss>
