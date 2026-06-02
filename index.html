@@ -2,49 +2,55 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>NRK Nyheter</title>
+<title>NRK Infoskjerm</title>
 
 <style>
 body {
   margin: 0;
   background: black;
   color: white;
-  font-family: Arial;
+  font-family: Arial, sans-serif;
 }
 
 .slide {
   display: none;
   height: 100vh;
   width: 100vw;
-  position: relative;
+  padding: 60px;
+  box-sizing: border-box;
 }
 
 .active {
   display: block;
 }
 
-.image {
-  position: absolute;
-  width: 100%;
+.container {
+  display: flex;
+  gap: 40px;
   height: 100%;
-  object-fit: cover;
-  opacity: 0.5;
 }
 
-.content {
-  position: absolute;
-  bottom: 60px;
-  left: 60px;
-  right: 60px;
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.image {
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+  margin-bottom: 20px;
 }
 
 .title {
-  font-size: 50px;
+  font-size: 36px;
+  font-weight: bold;
 }
 
 .desc {
-  font-size: 26px;
-  margin-top: 15px;
+  font-size: 22px;
+  margin-top: 10px;
 }
 </style>
 
@@ -69,87 +75,44 @@ async function loadRSS() {
   const xml = parser.parseFromString(text, "text/xml");
 
   const items = xml.getElementsByTagName("item");
-
   const container = document.getElementById("slides");
 
-let groups = [];
+  for (let i = 0; i < items.length; i += 2) {
 
-for (let i = 0; i < items.length; i += 2) {
+    const slide = document.createElement("div");
+    slide.classList.add("slide");
 
-  let html = '<div class="slide">';
+    if (i === 0) slide.classList.add("active");
 
-  for (let j = i; j < i + 2 && j < items.length; j++) {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("container");
 
-    const item = items[j];
+    for (let j = i; j < i + 2 && j < items.length; j++) {
 
-    const title = item.getElementsByTagName("title")[0].textContent;
-    const desc = item.getElementsByTagName("description")[0].textContent;
+      const item = items[j];
 
-    let image = "";
-    const media = item.getElementsByTagName("media:content")[0];
-    if (media) {
-      image = media.getAttribute("url");
+      const title = item.getElementsByTagName("title")[0].textContent;
+      const desc = item.getElementsByTagName("description")[0].textContent;
+
+      let image = "";
+      const media = item.getElementsByTagName("media:content")[0];
+      if (media) {
+        image = media.getAttribute("url");
+      }
+
+      const card = document.createElement("div");
+      card.classList.add("card");
+
+      card.innerHTML =
+        (image ? '<img class="image" src="' + image + '">' : '') +
+        '<div class="title">' + title + '</div>' +
+        '<div class="desc">' + desc + '</div>';
+
+      wrapper.appendChild(card);
     }
 
-    html += `
-      <div style="margin-bottom:40px;">
-        ${image ? '<img src="' + image + '" style="width:100%; height:300px; object-fit:cover;">' : ''}
-        <div style="font-size:36px; margin-top:10px;">${title}</div>
-        <div style="font-size:22px;">${desc}</div>
-      </div>
-    `;
-  }
-
-  html += '</div>';
-
-  groups.push(html);
-}
-
-const container = document.getElementById("slides");
-
-groups.forEach((group, index) => {
-  const div = document.createElement("div");
-  div.innerHTML = group;
-  const slide = div.firstChild;
-
-  if (index === 0) slide.classList.add("active");
-
-  container.appendChild(slide);
-});
-
-slides = document.querySelectorAll(".slide");
-
-setInterval(() => {
-  slides[currentSlide].classList.remove("active");
-  currentSlide = (currentSlide + 1) % slides.length;
-  slides[currentSlide].classList.add("active");
-}, 10000);
-
-    const item = items[i];
-
-    const title = item.getElementsByTagName("title")[0].textContent;
-    const desc = item.getElementsByTagName("description")[0].textContent;
-
-    let image = "";
-
-    const media = item.getElementsByTagName("media:content")[0];
-    if (media) {
-      image = media.getAttribute("url");
-    }
-
-    const div = document.createElement("div");
-    div.classList.add("slide");
-
-    if (i === 0) div.classList.add("active");
-
-    div.innerHTML =
-      (image ? '<img class="image" src="' + image + '">' : '') +
-      '<div class="content">' +
-      '<div class="title">' + title + '</div>' +
-      '<div class="desc">' + desc + '</div>' +
-      '</div>';
-
-    container.appendChild(div);
+    slide.appendChild(wrapper);
+    container.appendChild(slide);
   }
 
   slides = document.querySelectorAll(".slide");
@@ -158,7 +121,8 @@ setInterval(() => {
     slides[currentSlide].classList.remove("active");
     currentSlide = (currentSlide + 1) % slides.length;
     slides[currentSlide].classList.add("active");
-  }, 8000);
+  }, 10000);
+
 }
 
 loadRSS();
