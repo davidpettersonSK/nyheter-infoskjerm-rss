@@ -176,17 +176,18 @@ async function loadRSS() {
 
   const status = document.getElementById("status");
   const progressBar = document.getElementById("progressBar");
-
+  progressBar.style.width = "100%";
+  ``
   function updateStatus() {
 
     status.innerText =
       `Side ${currentSlide + 1}/${slides.length} • Neste side om ${remaining} sek`;
 
-    const percent =
-      ((slideDuration / 1000 - remaining) /
-      (slideDuration / 1000)) * 100;
+const percent =
+  (remaining / (slideDuration / 1000)) * 100;
 
-    progressBar.style.width = percent + "%";
+progressBar.style.width = percent + "%";
+``
   }
 
   updateStatus();
