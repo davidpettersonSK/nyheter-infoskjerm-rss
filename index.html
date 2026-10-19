@@ -213,7 +213,7 @@ async function loadRSS() {
         const wordCount =
             desc.trim().split(/\s+/).length;
 
-        if (wordCount < 10) {
+        if (desc.length < 100) {
             continue;
         }
 
