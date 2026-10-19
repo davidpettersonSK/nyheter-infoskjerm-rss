@@ -72,7 +72,7 @@ body {
 
 .image {
     width: 100%;
-    height: 62vh;
+    height: 55vh;
     object-fit: cover;
     border-radius: 12px;
 }
@@ -236,8 +236,8 @@ async function loadRSS() {
                 });
         }
 
-        if (desc.length > 800) {
-            desc = desc.substring(0, 800) + "...";
+        if (desc.length > 1500) {
+            desc = desc.substring(0, 1500) + "...";
         }
 
         let image = "";
