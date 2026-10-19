@@ -307,7 +307,7 @@ async function loadRSS() {
     function updateStatus() {
 
         status.innerText =
-            `Nyhetsside ${currentSlide + 1}/${slides.length} • Neste side om ${remaining} sek`;
+            `Nyhetsside ${currentSlide + 1} av ${slides.length} • Neste side om ${remaining} sek`;
 
         const percent =
             (remaining / (slideDuration / 1000)) * 100;
