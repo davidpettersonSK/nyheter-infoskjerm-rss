@@ -16,34 +16,48 @@ body {
 
 .header {
     position: fixed;
-    top: 20px;
-    left: 30px;
-    font-size: 30px;
-    font-weight: bold;
-    color: #d0d0d0;
+    top: 70px;
+    left: 50px;
     z-index: 1000;
+}
+
+.header img {
+    height: 48px;
+    width: auto;
 }
 
 .clock {
     position: fixed;
-    top: 20px;
-    right: 30px;
-    font-size: 30px;
+    top: 70px;
+    right: 50px;
+    font-size: 32px;
     font-weight: bold;
     color: #d0d0d0;
     z-index: 1000;
 }
 
 .slide {
-    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+
     width: 100vw;
     height: 100vh;
-    padding: 70px 50px 80px 50px;
+
+    padding: 140px 50px 80px 50px;
     box-sizing: border-box;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 1.5s ease-in-out,
+        visibility 1.5s ease-in-out;
 }
 
 .active {
-    display: block;
+    opacity: 1;
+    visibility: visible;
 }
 
 .card {
@@ -85,7 +99,6 @@ body {
     font-weight: bold;
     line-height: 1.15;
     color: white;
-
     text-shadow:
         0 3px 10px rgba(0,0,0,0.9);
 }
@@ -136,7 +149,9 @@ body {
 
 <body>
 
-<div class="header">NRK NYHETER</div>
+<div class="header">
+    <img src="nrk-logo.avif" alt="NRK">
+</div>
 
 <div id="clock" class="clock"></div>
 
@@ -180,11 +195,12 @@ async function loadRSS() {
 
     const items = xml.getElementsByTagName("item");
 
-    const maxNews = Math.min(items.length, 6);
+    const container =
+        document.getElementById("slides");
 
-    const container = document.getElementById("slides");
+    let newsCount = 0;
 
-    for (let i = 0; i < maxNews; i++) {
+    for (let i = 0; i < items.length; i++) {
 
         const item = items[i];
 
@@ -193,6 +209,13 @@ async function loadRSS() {
 
         let desc =
             item.getElementsByTagName("description")[0]?.textContent || "";
+
+        const wordCount =
+            desc.trim().split(/\s+/).length;
+
+        if (wordCount < 10) {
+            continue;
+        }
 
         const pubDate =
             item.getElementsByTagName("pubDate")[0]?.textContent || "";
@@ -229,7 +252,7 @@ async function loadRSS() {
         const slide = document.createElement("div");
         slide.classList.add("slide");
 
-        if (i === 0) {
+        if (newsCount === 0) {
             slide.classList.add("active");
         }
 
@@ -257,6 +280,12 @@ async function loadRSS() {
         `;
 
         container.appendChild(slide);
+
+        newsCount++;
+
+        if (newsCount >= 6) {
+            break;
+        }
     }
 
     slides = document.querySelectorAll(".slide");
@@ -321,3 +350,4 @@ loadRSS();
 
 </body>
 </html>
+``
