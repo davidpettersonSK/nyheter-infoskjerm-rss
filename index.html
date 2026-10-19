@@ -117,11 +117,13 @@ async function loadRSS() {
 
   slides = document.querySelectorAll(".slide");
 
+const slideDuration = 30000;
+  
   setInterval(() => {
     slides[currentSlide].classList.remove("active");
     currentSlide = (currentSlide + 1) % slides.length;
     slides[currentSlide].classList.add("active");
-  }, 10000);
+  }, slideDuration);
 
 }
 
