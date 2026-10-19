@@ -5,11 +5,13 @@
 <title>NRK Infoskjerm</title>
 
 <style>
+
 body {
   margin: 0;
   background: black;
   color: white;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 .slide {
@@ -55,22 +57,45 @@ body {
 
 .status {
   position: fixed;
-  bottom: 20px;
+  bottom: 28px;
   right: 30px;
   font-size: 18px;
   color: rgba(255,255,255,0.85);
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.6);
   padding: 8px 14px;
   border-radius: 8px;
+  z-index: 1000;
 }
-</style>
 
+.progress-container {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.15);
+  z-index: 999;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: #ffcc00;
+  transition: width 1s linear;
+}
+
+</style>
 </head>
+
 <body>
 
 <div id="slides"></div>
 
 <div id="status" class="status"></div>
+
+<div class="progress-container">
+  <div id="progressBar" class="progress-bar"></div>
+</div>
 
 <script>
 
@@ -88,27 +113,37 @@ async function loadRSS() {
   const xml = parser.parseFromString(text, "text/xml");
 
   const items = xml.getElementsByTagName("item");
+
+  const maxNews = Math.min(items.length, 10);
+
   const container = document.getElementById("slides");
 
-  for (let i = 0; i < items.length; i += 2) {
+  for (let i = 0; i < maxNews; i += 2) {
 
     const slide = document.createElement("div");
     slide.classList.add("slide");
 
-    if (i === 0) slide.classList.add("active");
+    if (i === 0) {
+      slide.classList.add("active");
+    }
 
     const wrapper = document.createElement("div");
     wrapper.classList.add("container");
 
-    for (let j = i; j < i + 2 && j < items.length; j++) {
+    for (let j = i; j < i + 2 && j < maxNews; j++) {
 
       const item = items[j];
 
-      const title = item.getElementsByTagName("title")[0].textContent;
-      const desc = item.getElementsByTagName("description")[0].textContent;
+      const title =
+        item.getElementsByTagName("title")[0]?.textContent || "";
+
+      const desc =
+        item.getElementsByTagName("description")[0]?.textContent || "";
 
       let image = "";
-      const media = item.getElementsByTagName("media:content")[0];
+
+      const media =
+        item.getElementsByTagName("media:content")[0];
 
       if (media) {
         image = media.getAttribute("url");
@@ -118,7 +153,9 @@ async function loadRSS() {
       card.classList.add("card");
 
       card.innerHTML =
-        (image ? '<img class="image" src="' + image + '">' : '') +
+        (image
+          ? '<img class="image" src="' + image + '">'
+          : '') +
         '<div class="title">' + title + '</div>' +
         '<div class="desc">' + desc + '</div>';
 
@@ -131,12 +168,25 @@ async function loadRSS() {
 
   slides = document.querySelectorAll(".slide");
 
+  if (!slides.length) return;
+
   const slideDuration = 30000;
+
   let remaining = slideDuration / 1000;
 
+  const status = document.getElementById("status");
+  const progressBar = document.getElementById("progressBar");
+
   function updateStatus() {
-    document.getElementById("status").innerText =
+
+    status.innerText =
       `Side ${currentSlide + 1}/${slides.length} • Neste side om ${remaining} sek`;
+
+    const percent =
+      ((slideDuration / 1000 - remaining) /
+      (slideDuration / 1000)) * 100;
+
+    progressBar.style.width = percent + "%";
   }
 
   updateStatus();
@@ -149,11 +199,14 @@ async function loadRSS() {
 
       slides[currentSlide].classList.remove("active");
 
-      currentSlide = (currentSlide + 1) % slides.length;
+      currentSlide =
+        (currentSlide + 1) % slides.length;
 
       slides[currentSlide].classList.add("active");
 
       remaining = slideDuration / 1000;
+
+      progressBar.style.width = "0%";
     }
 
     updateStatus();
