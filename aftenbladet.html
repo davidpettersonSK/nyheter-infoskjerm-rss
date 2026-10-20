@@ -210,9 +210,90 @@ for (let i = 0; i < Math.min(items.length, 30); i++) {
 const title =
     item.getElementsByTagName("title")[0]?.textContent || "";
 
+const upperTitle = title.toUpperCase();
+
+/* Filtrer bort debatt og meningsstoff */
+
+if (
+    upperTitle.startsWith("DEBATT:") ||
+    upperTitle.startsWith("KOMMENTAR:") ||
+    upperTitle.startsWith("LESERBREV:") ||
+    upperTitle.startsWith("MENINGER:")
+) {
+    continue;
+}
+
+/* Filtrer bort bildegallerier */
+
+if (
+    upperTitle.includes("SE ALLE BILDENE") ||
+    upperTitle.includes("SJEKK BILDER")
+) {
+    continue;
+}
+
 let desc =
     item.getElementsByTagName("description")[0]?.textContent || "";
 
+/* Lokal relevans */
+
+const articleText =
+    (title + " " + desc).toLowerCase();
+
+let localScore = 0;
+
+/* Høy prioritet */
+
+if (articleText.includes("stavanger")) localScore += 5;
+if (articleText.includes("stavanger kommune")) localScore += 5;
+
+if (articleText.includes("sus")) localScore += 5;
+
+if (
+    articleText.includes("universitetssjukehuset") ||
+    articleText.includes("universitetssykehuset")
+) {
+    localScore += 5;
+}
+
+if (articleText.includes("helse vest")) localScore += 5;
+
+/* Middels prioritet */
+
+if (articleText.includes("sandnes")) localScore += 4;
+if (articleText.includes("sola")) localScore += 4;
+if (articleText.includes("randaberg")) localScore += 4;
+
+if (articleText.includes("uis")) localScore += 4;
+if (articleText.includes("universitetet i stavanger")) {
+    localScore += 4;
+}
+
+/* Lavere prioritet */
+
+if (articleText.includes("viking")) localScore += 3;
+
+if (articleText.includes("kolumbus")) localScore += 3;
+if (articleText.includes("lyse")) localScore += 3;
+if (articleText.includes("sola flyplass")) localScore += 3;
+
+if (articleText.includes("forus")) localScore += 2;
+if (articleText.includes("paradis")) localScore += 2;
+if (articleText.includes("madla")) localScore += 2;
+if (articleText.includes("tau")) localScore += 2;
+if (articleText.includes("ryfylke")) localScore += 2;
+
+/* Krev litt innhold */
+
+if (desc.length < 100) {
+    continue;
+}
+
+/* Må være lokal nok */
+
+if (localScore === 0) {
+    continue;
+}
 const articleText =
     (title + " " + desc).toLowerCase();
 
