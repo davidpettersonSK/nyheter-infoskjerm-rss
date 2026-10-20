@@ -1,1 +1,354 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<title>Aftenbladet Infoskjerm</title>
 
+<style>
+
+body {
+    margin: 0;
+    background: #000;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+.header {
+    position: fixed;
+    top: 20px;
+    left: 50px;
+    z-index: 1000;
+}
+
+.header img {
+    height: 48px;
+    width: auto;
+}
+
+.clock {
+    position: fixed;
+    top: 20px;
+    right: 50px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #d0d0d0;
+    z-index: 1000;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    padding: 90px 50px 80px 50px;
+    box-sizing: border-box;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 1.5s ease-in-out,
+        visibility 1.5s ease-in-out;
+}
+
+.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.hero {
+    position: relative;
+}
+
+.image {
+    width: 100%;
+    height: 55vh;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 40px;
+
+    background:
+        linear-gradient(
+            transparent,
+            rgba(0,0,0,0.9)
+        );
+
+    border-radius: 0 0 12px 12px;
+}
+
+.title {
+    font-size: 52px;
+    font-weight: bold;
+    line-height: 1.15;
+    color: white;
+
+    text-shadow:
+        0 3px 10px rgba(0,0,0,0.9);
+}
+
+.pubdate {
+    margin-top: 10px;
+    font-size: 22px;
+    color: #d0d0d0;
+}
+
+.desc {
+    margin-top: 20px;
+    font-size: 30px;
+    color: #dddddd;
+    line-height: 1.55;
+}
+
+.status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-size: 16px;
+    color: rgba(255,255,255,0.85);
+    background: rgba(0,0,0,0.6);
+    padding: 8px 12px;
+    border-radius: 8px;
+    z-index: 1000;
+}
+
+.progress-container {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.15);
+}
+
+.progress-bar {
+    height: 100%;
+    width: 100%;
+    background: #808080;
+    transition: width 1s linear;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <img src="aftenbladet-logo.png" alt="Aftenbladet">
+</div>
+
+<div id="clock" class="clock"></div>
+
+<div id="slides"></div>
+
+<div id="status" class="status"></div>
+
+<div class="progress-container">
+    <div id="progressBar" class="progress-bar"></div>
+</div>
+
+<script>
+
+let currentSlide = 0;
+let slides = [];
+
+function updateClock() {
+
+    const now = new Date();
+
+    document.getElementById("clock").innerText =
+        now.toLocaleTimeString("no-NO", {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+async function loadRSS() {
+
+    const url =
+      "https://aftenbladet-rss.david-tunsberg-petterson.workers.dev/";
+
+    const response = await fetch(url);
+    const text = await response.text();
+
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+
+    const items =
+        xml.getElementsByTagName("item");
+
+    const container =
+        document.getElementById("slides");
+
+    let newsCount = 0;
+
+    for (let i = 0; i < items.length; i++) {
+
+        const item = items[i];
+
+        const title =
+            item.getElementsByTagName("title")[0]?.textContent || "";
+
+        let desc =
+            item.getElementsByTagName("description")[0]?.textContent || "";
+
+        if (desc.length < 100) {
+            continue;
+        }
+
+        const pubDate =
+            item.getElementsByTagName("pubDate")[0]?.textContent || "";
+
+        let formattedDate = "";
+
+        if (pubDate) {
+
+            formattedDate =
+                new Date(pubDate).toLocaleString("no-NO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+        }
+
+        let image = "";
+
+        const enclosure =
+            item.getElementsByTagName("enclosure")[0];
+
+        if (enclosure) {
+            image =
+                enclosure.getAttribute("url");
+        }
+
+        const slide =
+            document.createElement("div");
+
+        slide.classList.add("slide");
+
+        if (newsCount === 0) {
+            slide.classList.add("active");
+        }
+
+        slide.innerHTML = `
+            <div class="card">
+
+                <div class="hero">
+
+                    ${image ? `<img class="image" src="${image}">` : ""}
+
+                    <div class="overlay">
+                        <div class="title">
+                            ${title}
+                        </div>
+
+                        <div class="pubdate">
+                            Publisert ${formattedDate}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="desc">
+                    ${desc}
+                </div>
+
+            </div>
+        `;
+
+        container.appendChild(slide);
+
+        newsCount++;
+
+        if (newsCount >= 6) {
+            break;
+        }
+    }
+
+    slides =
+        document.querySelectorAll(".slide");
+
+    if (!slides.length) {
+        return;
+    }
+
+    const slideDuration = 20000;
+
+    let remaining =
+        slideDuration / 1000;
+
+    const progressBar =
+        document.getElementById("progressBar");
+
+    const status =
+        document.getElementById("status");
+
+    function updateStatus() {
+
+        status.innerText =
+            `Nyhetsside ${currentSlide + 1}/${slides.length} • Neste side om ${remaining} sek`;
+
+        const percent =
+            (remaining / (slideDuration / 1000)) * 100;
+
+        progressBar.style.width =
+            percent + "%";
+    }
+
+    updateStatus();
+
+    setInterval(() => {
+
+        remaining--;
+
+        if (remaining < 0) {
+
+            slides[currentSlide]
+                .classList.remove("active");
+
+            currentSlide =
+                (currentSlide + 1) % slides.length;
+
+            slides[currentSlide]
+                .classList.add("active");
+
+            remaining =
+                slideDuration / 1000;
+
+            progressBar.style.width =
+                "100%";
+        }
+
+        updateStatus();
+
+    }, 1000);
+}
+
+loadRSS();
+
+</script>
+
+</body>
+</html>
