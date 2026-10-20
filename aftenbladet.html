@@ -40,10 +40,8 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-
     width: 100vw;
     height: 100vh;
-
     padding: 90px 50px 80px 50px;
     box-sizing: border-box;
 
@@ -99,9 +97,7 @@ body {
     font-weight: bold;
     line-height: 1.15;
     color: white;
-
-    text-shadow:
-        0 3px 10px rgba(0,0,0,0.9);
+    text-shadow: 0 3px 10px rgba(0,0,0,0.9);
 }
 
 .pubdate {
@@ -194,161 +190,43 @@ async function loadRSS() {
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, "text/xml");
 
-    const items =
-        xml.getElementsByTagName("item");
+    const items = xml.getElementsByTagName("item");
 
     const container =
         document.getElementById("slides");
 
-let newsCount = 0;
+    let newsCount = 0;
 
-/* Les gjennom de første 30 RSS-sakene */
-for (let i = 0; i < Math.min(items.length, 30); i++) {
+    for (let i = 0; i < items.length; i++) {
 
         const item = items[i];
 
-const title =
-    item.getElementsByTagName("title")[0]?.textContent || "";
+        const title =
+            item.getElementsByTagName("title")[0]?.textContent || "";
 
-const upperTitle = title.toUpperCase();
+        const upperTitle =
+            title.toUpperCase();
 
-/* Filtrer bort debatt og meningsstoff */
+        if (
+            upperTitle.startsWith("DEBATT:") ||
+            upperTitle.startsWith("KOMMENTAR:") ||
+            upperTitle.startsWith("LESERBREV:") ||
+            upperTitle.startsWith("MENINGER:")
+        ) {
+            continue;
+        }
 
-if (
-    upperTitle.startsWith("DEBATT:") ||
-    upperTitle.startsWith("KOMMENTAR:") ||
-    upperTitle.startsWith("LESERBREV:") ||
-    upperTitle.startsWith("MENINGER:")
-) {
-    continue;
-}
+        if (
+            upperTitle.includes("SE ALLE BILDENE") ||
+            upperTitle.includes("SJEKK BILDER")
+        ) {
+            continue;
+        }
 
-/* Filtrer bort bildegallerier */
+        let desc =
+            item.getElementsByTagName("description")[0]?.textContent || "";
 
-if (
-    upperTitle.includes("SE ALLE BILDENE") ||
-    upperTitle.includes("SJEKK BILDER")
-) {
-    continue;
-}
-
-let desc =
-    item.getElementsByTagName("description")[0]?.textContent || "";
-
-/* Lokal relevans */
-
-const articleText =
-    (title + " " + desc).toLowerCase();
-
-let localScore = 0;
-
-/* Høy prioritet */
-
-if (articleText.includes("stavanger")) localScore += 5;
-if (articleText.includes("stavanger kommune")) localScore += 5;
-
-if (articleText.includes("sus")) localScore += 5;
-
-if (
-    articleText.includes("universitetssjukehuset") ||
-    articleText.includes("universitetssykehuset")
-) {
-    localScore += 5;
-}
-
-if (articleText.includes("helse vest")) localScore += 5;
-
-/* Middels prioritet */
-
-if (articleText.includes("sandnes")) localScore += 4;
-if (articleText.includes("sola")) localScore += 4;
-if (articleText.includes("randaberg")) localScore += 4;
-
-if (articleText.includes("uis")) localScore += 4;
-if (articleText.includes("universitetet i stavanger")) {
-    localScore += 4;
-}
-
-/* Lavere prioritet */
-
-if (articleText.includes("viking")) localScore += 3;
-
-if (articleText.includes("kolumbus")) localScore += 3;
-if (articleText.includes("lyse")) localScore += 3;
-if (articleText.includes("sola flyplass")) localScore += 3;
-
-if (articleText.includes("forus")) localScore += 2;
-if (articleText.includes("paradis")) localScore += 2;
-if (articleText.includes("madla")) localScore += 2;
-if (articleText.includes("tau")) localScore += 2;
-if (articleText.includes("ryfylke")) localScore += 2;
-
-/* Krev litt innhold */
-
-if (desc.length < 100) {
-    continue;
-}
-
-/* Må være lokal nok */
-
-if (localScore === 0) {
-    continue;
-}
-const articleText =
-    (title + " " + desc).toLowerCase();
-
-let localScore = 0;
-
-/* Høy prioritet */
-
-if (articleText.includes("stavanger")) localScore += 5;
-if (articleText.includes("stavanger kommune")) localScore += 5;
-
-if (articleText.includes("sus")) localScore += 5;
-
-if (
-    articleText.includes("universitetssjukehuset") ||
-    articleText.includes("universitetssykehuset")
-) localScore += 5;
-
-if (articleText.includes("helse vest")) localScore += 5;
-
-/* Middels prioritet */
-
-if (articleText.includes("sandnes")) localScore += 4;
-if (articleText.includes("sola")) localScore += 4;
-if (articleText.includes("randaberg")) localScore += 4;
-
-if (articleText.includes("uis")) localScore += 4;
-if (articleText.includes("universitetet i stavanger")) localScore += 4;
-
-/* Lavere prioritet */
-
-if (articleText.includes("viking")) localScore += 3;
-
-if (articleText.includes("kolumbus")) localScore += 3;
-if (articleText.includes("lyse")) localScore += 3;
-if (articleText.includes("sola flyplass")) localScore += 3;
-
-if (articleText.includes("forus")) localScore += 2;
-if (articleText.includes("paradis")) localScore += 2;
-if (articleText.includes("madla")) localScore += 2;
-if (articleText.includes("tau")) localScore += 2;
-if (articleText.includes("ryfylke")) localScore += 2;
-
-/* Fjern saker uten ordentlig ingress */
-
-if (desc.length < 100) {
-    continue;
-}
-
-/* Kun lokale saker */
-
-if (localScore === 0) {
-    continue;
-}
-
-        if (desc.length < 100) {
+        if (desc.length < 30) {
             continue;
         }
 
@@ -375,8 +253,7 @@ if (localScore === 0) {
             item.getElementsByTagName("enclosure")[0];
 
         if (enclosure) {
-            image =
-                enclosure.getAttribute("url");
+            image = enclosure.getAttribute("url");
         }
 
         const slide =
@@ -396,9 +273,7 @@ if (localScore === 0) {
                     ${image ? `<img class="image" src="${image}">` : ""}
 
                     <div class="overlay">
-                        <div class="title">
-                            ${title}
-                        </div>
+                        <div class="title">${title}</div>
 
                         <div class="pubdate">
                             Publisert ${formattedDate}
@@ -423,8 +298,7 @@ if (localScore === 0) {
         }
     }
 
-    slides =
-        document.querySelectorAll(".slide");
+    slides = document.querySelectorAll(".slide");
 
     if (!slides.length) {
         return;
@@ -432,8 +306,7 @@ if (localScore === 0) {
 
     const slideDuration = 20000;
 
-    let remaining =
-        slideDuration / 1000;
+    let remaining = slideDuration / 1000;
 
     const progressBar =
         document.getElementById("progressBar");
@@ -473,8 +346,7 @@ if (localScore === 0) {
             remaining =
                 slideDuration / 1000;
 
-            progressBar.style.width =
-                "100%";
+            progressBar.style.width = "100%";
         }
 
         updateStatus();
