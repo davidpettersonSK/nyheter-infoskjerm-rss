@@ -225,10 +225,46 @@ async function loadRSS() {
 
         let desc =
             item.getElementsByTagName("description")[0]?.textContent || "";
+const articleText =
+    (title + " " + desc).toLowerCase();
 
-        if (desc.length < 30) {
-            continue;
-        }
+const localWords = [
+    "stavanger",
+    "stavanger kommune",
+    "sandnes",
+    "sola",
+    "randaberg",
+    "sus",
+    "helse vest",
+    "universitetssykehuset",
+    "universitetssjukehuset",
+    "uis",
+    "universitetet i stavanger",
+    "viking",
+    "kolumbus",
+    "lyse",
+    "forus",
+    "madla",
+    "paradis",
+    "ryfylke"
+];
+
+let isLocal = false;
+
+for (const word of localWords) {
+    if (articleText.includes(word)) {
+        isLocal = true;
+        break;
+    }
+}
+
+if (desc.length < 30) {
+    continue;
+}
+
+if (!isLocal) {
+    continue;
+}
 
         const pubDate =
             item.getElementsByTagName("pubDate")[0]?.textContent || "";
