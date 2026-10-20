@@ -22,8 +22,7 @@ body {
 }
 
 .header img {
-    height: 48px;
-    width: auto;
+    height: 50px;
 }
 
 .clock {
@@ -40,8 +39,10 @@ body {
     position: absolute;
     top: 0;
     left: 0;
+
     width: 100vw;
     height: 100vh;
+
     padding: 90px 50px 80px 50px;
     box-sizing: border-box;
 
@@ -64,55 +65,50 @@ body {
     height: 100%;
 }
 
-.hero {
-    position: relative;
+.top-section {
+    display: flex;
+    gap: 40px;
+}
+
+.image-container {
+    width: 42%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .image {
     width: 100%;
-    height: 50vh;
+    max-height: 45vh;
     object-fit: contain;
     border-radius: 12px;
-    background: #000;
-
+    background: #111;
 }
 
-.overlay {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-
-    padding: 40px;
-
-    background:
-        linear-gradient(
-            transparent,
-            rgba(0,0,0,0.9)
-        );
-
-    border-radius: 0 0 12px 12px;
+.text-container {
+    width: 58%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .title {
-    font-size: 52px;
+    font-size: 48px;
     font-weight: bold;
     line-height: 1.15;
-    color: white;
-    text-shadow: 0 3px 10px rgba(0,0,0,0.9);
 }
 
 .pubdate {
-    margin-top: 10px;
+    margin-top: 15px;
     font-size: 22px;
-    color: #d0d0d0;
+    color: #aaaaaa;
 }
 
 .desc {
-    margin-top: 20px;
-    font-size: 30px;
+    margin-top: 35px;
+    font-size: 31px;
     color: #dddddd;
-    line-height: 1.55;
+    line-height: 1.6;
 }
 
 .status {
@@ -121,7 +117,7 @@ body {
     right: 20px;
     font-size: 16px;
     color: rgba(255,255,255,0.85);
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.65);
     padding: 8px 12px;
     border-radius: 8px;
     z-index: 1000;
@@ -169,13 +165,14 @@ let slides = [];
 
 function updateClock() {
 
-    const now = new Date();
-
     document.getElementById("clock").innerText =
-        now.toLocaleTimeString("no-NO", {
-            hour: "2-digit",
-            minute: "2-digit"
-        });
+        new Date().toLocaleTimeString(
+            "no-NO",
+            {
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        );
 }
 
 updateClock();
@@ -227,46 +224,10 @@ async function loadRSS() {
 
         let desc =
             item.getElementsByTagName("description")[0]?.textContent || "";
-const articleText =
-    (title + " " + desc).toLowerCase();
 
-const localWords = [
-    "stavanger",
-    "stavanger kommune",
-    "sandnes",
-    "sola",
-    "randaberg",
-    "sus",
-    "helse vest",
-    "universitetssykehuset",
-    "universitetssjukehuset",
-    "uis",
-    "universitetet i stavanger",
-    "viking",
-    "kolumbus",
-    "lyse",
-    "forus",
-    "madla",
-    "paradis",
-    "ryfylke"
-];
-
-let isLocal = false;
-
-for (const word of localWords) {
-    if (articleText.includes(word)) {
-        isLocal = true;
-        break;
-    }
-}
-
-if (desc.length < 30) {
-    continue;
-}
-
-if (!isLocal) {
-    continue;
-}
+        if (desc.length < 30) {
+            continue;
+        }
 
         const pubDate =
             item.getElementsByTagName("pubDate")[0]?.textContent || "";
@@ -276,13 +237,16 @@ if (!isLocal) {
         if (pubDate) {
 
             formattedDate =
-                new Date(pubDate).toLocaleString("no-NO", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
+                new Date(pubDate).toLocaleString(
+                    "no-NO",
+                    {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    }
+                );
         }
 
         let image = "";
@@ -291,7 +255,8 @@ if (!isLocal) {
             item.getElementsByTagName("enclosure")[0];
 
         if (enclosure) {
-            image = enclosure.getAttribute("url");
+            image =
+                enclosure.getAttribute("url");
         }
 
         const slide =
@@ -306,16 +271,26 @@ if (!isLocal) {
         slide.innerHTML = `
             <div class="card">
 
-                <div class="hero">
+                <div class="top-section">
 
-                    ${image ? `<img class="image" src="${image}">` : ""}
+                    <div class="image-container">
 
-                    <div class="overlay">
-                        <div class="title">${title}</div>
+                        ${image
+                            ? `<img class="image" src="${image}">`
+                            : ""}
+
+                    </div>
+
+                    <div class="text-container">
+
+                        <div class="title">
+                            ${title}
+                        </div>
 
                         <div class="pubdate">
                             Publisert ${formattedDate}
                         </div>
+
                     </div>
 
                 </div>
@@ -338,13 +313,12 @@ if (!isLocal) {
 
     slides = document.querySelectorAll(".slide");
 
-    if (!slides.length) {
-        return;
-    }
+    if (!slides.length) return;
 
     const slideDuration = 20000;
 
-    let remaining = slideDuration / 1000;
+    let remaining =
+        slideDuration / 1000;
 
     const progressBar =
         document.getElementById("progressBar");
@@ -358,7 +332,8 @@ if (!isLocal) {
             `Nyhetsside ${currentSlide + 1}/${slides.length} • Neste side om ${remaining} sek`;
 
         const percent =
-            (remaining / (slideDuration / 1000)) * 100;
+            (remaining / (slideDuration / 1000))
+            * 100;
 
         progressBar.style.width =
             percent + "%";
@@ -376,7 +351,8 @@ if (!isLocal) {
                 .classList.remove("active");
 
             currentSlide =
-                (currentSlide + 1) % slides.length;
+                (currentSlide + 1)
+                % slides.length;
 
             slides[currentSlide]
                 .classList.add("active");
@@ -384,7 +360,8 @@ if (!isLocal) {
             remaining =
                 slideDuration / 1000;
 
-            progressBar.style.width = "100%";
+            progressBar.style.width =
+                "100%";
         }
 
         updateStatus();
