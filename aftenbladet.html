@@ -15,17 +15,18 @@ body {
 }
 
 .header {
-    margin-left: 75px;
-    margin-top: 20px;
-    margin-bottom: 40px;
+    position: fixed;
+    top: 18px;
+    left: 50px;
+    margin: 0;
+    z-index: 1000;
 }
 
 .logo {
-    position: fixed;
-    top: 20px;
-    left: 50px;
-    height: 200px;
+    display: block;
+    height: 100px;
     width: auto;
+    object-fit: contain;
     z-index: 1000;
 }
 .image-container {
@@ -40,6 +41,9 @@ body {
     font-weight: bold;
     color: #333333;
     z-index: 1000;
+    line-height: 1;
+    display: flex;
+    align-items: center;
 }
 
 .slide {
@@ -153,7 +157,7 @@ body {
 <body>
 
 <div class="header">
-    <img src="Stavanger-Aftenblad.png" alt="Aftenbladet">
+    <img src="Stavanger-Aftenblad.png" alt="Aftenbladet" class="logo">
 </div>
 
 <div id="clock" class="clock"></div>
