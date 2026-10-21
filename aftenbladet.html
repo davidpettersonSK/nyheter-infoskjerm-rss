@@ -2,7 +2,7 @@
 <html lang="no">
 <head>
 <meta charset="UTF-8">
-<title>NRK Rogaland Infoskjerm</title>
+<title>NRK Rogaland</title>
 
 <style>
 
@@ -150,7 +150,7 @@ body {
 <body>
 
 <div class="header">
-    <img src="Stavanger-Aftenblad.png" alt="Aftenbladet">
+    <img src="nrk-logo.avif" alt="NRK">
 </div>
 
 <div id="clock" class="clock"></div>
@@ -169,6 +169,7 @@ let currentSlide = 0;
 let slides = [];
 
 function updateClock() {
+
     const now = new Date();
 
     document.getElementById("clock").innerText =
@@ -181,131 +182,10 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-function cleanText(value) {
-    return (value || "")
-        .replace(/<br\s*\/?\s*>/gi, " ")
-        .replace(/<[^>]+>/g, " ")
-        .replace(/&nbsp;/gi, " ")
-        .replace(/&amp;/gi, "&")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-function normalizeText(value) {
-    return cleanText(value)
-        .replace(/\s*\.\.\.\s*$/g, "")
-        .replace(/^\s*[\-–—]\s*/g, "")
-        .trim();
-}
-
-function isLikelyNoise(text) {
-    const lower = text.toLowerCase();
-    return lower.includes("abonner") ||
-        lower.includes("meld deg inn") ||
-        lower.includes("les mer") ||
-        lower.includes("logg inn") ||
-        lower.includes("betal") ||
-        lower.includes("søk") ||
-        lower.includes("annonse") ||
-        lower.includes("facebook") ||
-        lower.includes("twitter") ||
-        lower.includes("instagram");
-}
-
-function extractParagraphsFromHtml(htmlString) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlString, "text/html");
-
-    const selectors = [
-        "article p",
-        "main p",
-        ".article-body p",
-        ".article-content p",
-        "[data-testid='article-body'] p",
-        "p"
-    ];
-
-    const paragraphs = [];
-
-    for (const selector of selectors) {
-        const nodes = Array.from(doc.querySelectorAll(selector));
-
-        for (const node of nodes) {
-            const text = normalizeText(node.textContent || "");
-            if (text.length > 80 && !isLikelyNoise(text)) {
-                paragraphs.push(text);
-            }
-        }
-
-        if (paragraphs.length > 0) {
-            break;
-        }
-    }
-
-    return paragraphs;
-}
-
-async function fetchArticleText(articleUrl) {
-    if (!articleUrl) return "";
-
-    const candidateUrls = [];
-    const trimmed = articleUrl.trim();
-    if (trimmed) candidateUrls.push(trimmed);
-
-    const withoutProtocol = trimmed.replace(/^https?:\/\//, "");
-    if (withoutProtocol) {
-        candidateUrls.push(`https://r.jina.ai/http://${withoutProtocol}`);
-    }
-
-    for (const url of candidateUrls) {
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
-                    "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8"
-                }
-            });
-
-            if (!response.ok) continue;
-
-            const contentType = response.headers.get("content-type") || "";
-            const text = await response.text();
-
-            if (!text || text.length < 40) continue;
-
-            if (contentType.includes("application/json")) {
-                try {
-                    const parsed = JSON.parse(text);
-                    if (parsed?.content) {
-                        return normalizeText(parsed.content).slice(0, 500);
-                    }
-                } catch (e) {}
-            }
-
-            const directParagraphs = extractParagraphsFromHtml(text);
-            if (directParagraphs.length > 0) {
-                return directParagraphs.slice(0, 4).join(" ").slice(0, 500);
-            }
-
-            const cleaned = normalizeText(
-                text
-                    .replace(/[#>*_`\[\]()-]/g, " ")
-                    .replace(/\n+/g, " ")
-            );
-
-            if (cleaned.length > 120 && !isLikelyNoise(cleaned)) {
-                return cleaned.slice(0, 500);
-            }
-        } catch (error) {
-            console.warn("Klarte ikke hente artikkeltekst fra URL:", url, error);
-        }
-    }
-
-    return "";
-}
-
 async function loadRSS() {
-    const url = "https://www.nrk.no/rogaland/siste.rss";
+
+    const url =
+        "https://spring-dew-1b91.david-tunsberg-petterson.workers.dev/";
 
     const response = await fetch(url);
     const text = await response.text();
@@ -314,67 +194,59 @@ async function loadRSS() {
     const xml = parser.parseFromString(text, "text/xml");
 
     const items = xml.getElementsByTagName("item");
-    const container = document.getElementById("slides");
+
+    const container =
+        document.getElementById("slides");
+
     let newsCount = 0;
 
     for (let i = 0; i < items.length; i++) {
+
         const item = items[i];
 
-        const title = item.getElementsByTagName("title")[0]?.textContent || "";
-        const upperTitle = title.toUpperCase();
+        const title =
+            item.getElementsByTagName("title")[0]?.textContent || "";
 
-        if (
-            upperTitle.startsWith("DEBATT:") ||
-            upperTitle.startsWith("KOMMENTAR:") ||
-            upperTitle.startsWith("LESERBREV:") ||
-            upperTitle.startsWith("MENINGER:")
-        ) {
+        let desc =
+            item.getElementsByTagName("description")[0]?.textContent || "";
+
+        const wordCount =
+            desc.trim().split(/\s+/).length;
+
+        if (desc.length < 100) {
             continue;
         }
 
-        if (
-            upperTitle.includes("SE ALLE BILDENE") ||
-            upperTitle.includes("SJEKK BILDER")
-        ) {
-            continue;
-        }
+        const pubDate =
+            item.getElementsByTagName("pubDate")[0]?.textContent || "";
 
-        const articleUrl =
-            item.getElementsByTagName("link")[0]?.textContent ||
-            item.getElementsByTagName("guid")[0]?.textContent ||
-            "";
-
-        let rawDesc = item.getElementsByTagName("description")[0]?.textContent || "";
-        rawDesc = normalizeText(rawDesc);
-
-        if (!rawDesc || rawDesc.length < 30 || rawDesc.endsWith("...")) {
-            const articleText = await fetchArticleText(articleUrl);
-            if (articleText && articleText.length > 30) {
-                rawDesc = articleText;
-            }
-        }
-
-        if (!rawDesc || rawDesc.length < 30) {
-            continue;
-        }
-
-        const pubDate = item.getElementsByTagName("pubDate")[0]?.textContent || "";
         let formattedDate = "";
 
         if (pubDate) {
-            formattedDate = new Date(pubDate).toLocaleString("no-NO", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            });
+
+            const date = new Date(pubDate);
+
+            formattedDate =
+                date.toLocaleString("no-NO", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+        }
+
+        if (desc.length > 1500) {
+            desc = desc.substring(0, 1500) + "...";
         }
 
         let image = "";
-        const enclosure = item.getElementsByTagName("enclosure")[0];
-        if (enclosure) {
-            image = enclosure.getAttribute("url");
+
+        const media =
+            item.getElementsByTagName("media:content")[0];
+
+        if (media) {
+            image = media.getAttribute("url");
         }
 
         const slide = document.createElement("div");
@@ -393,17 +265,22 @@ async function loadRSS() {
 
                     <div class="overlay">
                         <div class="title">${title}</div>
-                        <div class="pubdate">Publisert ${formattedDate}</div>
+                        <div class="pubdate">
+                            Publisert ${formattedDate}
+                        </div>
                     </div>
 
                 </div>
 
-                <div class="desc">${rawDesc}</div>
+                <div class="desc">
+                    ${desc}
+                </div>
 
             </div>
         `;
 
         container.appendChild(slide);
+
         newsCount++;
 
         if (newsCount >= 6) {
@@ -412,33 +289,58 @@ async function loadRSS() {
     }
 
     slides = document.querySelectorAll(".slide");
-    if (!slides.length) return;
+
+    if (!slides.length) {
+        return;
+    }
 
     const slideDuration = 20000;
+
     let remaining = slideDuration / 1000;
-    const progressBar = document.getElementById("progressBar");
-    const status = document.getElementById("status");
+
+    const progressBar =
+        document.getElementById("progressBar");
+
+    const status =
+        document.getElementById("status");
 
     function updateStatus() {
-        status.innerText = `Nyhetsside ${currentSlide + 1} av ${slides.length} • Neste side om ${remaining} sek`;
-        const percent = (remaining / (slideDuration / 1000)) * 100;
-        progressBar.style.width = percent + "%";
+
+        status.innerText =
+            `Nyhetsside ${currentSlide + 1} av ${slides.length} • Neste side om ${remaining} sek`;
+
+        const percent =
+            (remaining / (slideDuration / 1000)) * 100;
+
+        progressBar.style.width =
+            percent + "%";
     }
 
     updateStatus();
 
     setInterval(() => {
+
         remaining--;
 
         if (remaining < 0) {
-            slides[currentSlide].classList.remove("active");
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].classList.add("active");
-            remaining = slideDuration / 1000;
+
+            slides[currentSlide]
+                .classList.remove("active");
+
+            currentSlide =
+                (currentSlide + 1) % slides.length;
+
+            slides[currentSlide]
+                .classList.add("active");
+
+            remaining =
+                slideDuration / 1000;
+
             progressBar.style.width = "100%";
         }
 
         updateStatus();
+
     }, 1000);
 }
 
@@ -448,3 +350,4 @@ loadRSS();
 
 </body>
 </html>
+``
