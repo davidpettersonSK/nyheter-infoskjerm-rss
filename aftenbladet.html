@@ -228,69 +228,113 @@ function cleanText(value) {
 function normalizeText(value) {
     return cleanText(value)
         .replace(/\s*\.\.\.\s*$/g, "")
+        .replace(/^\s*[\-–—]\s*/g, "")
         .trim();
+}
+
+function isLikelyNoise(text) {
+    const lower = text.toLowerCase();
+    return lower.includes("abonner") ||
+        lower.includes("meld deg inn") ||
+        lower.includes("les mer") ||
+        lower.includes("logg inn") ||
+        lower.includes("betal") ||
+        lower.includes("søk") ||
+        lower.includes("annonse") ||
+        lower.includes("facebook") ||
+        lower.includes("twitter") ||
+        lower.includes("instagram");
+}
+
+function extractParagraphsFromHtml(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, "text/html");
+
+    const selectors = [
+        "article p",
+        "main p",
+        ".article-body p",
+        ".article-content p",
+        "[data-testid='article-body'] p",
+        "p"
+    ];
+
+    const paragraphs = [];
+
+    for (const selector of selectors) {
+        const nodes = Array.from(doc.querySelectorAll(selector));
+
+        for (const node of nodes) {
+            const text = normalizeText(node.textContent || "");
+            if (text.length > 80 && !isLikelyNoise(text)) {
+                paragraphs.push(text);
+            }
+        }
+
+        if (paragraphs.length > 0) {
+            break;
+        }
+    }
+
+    return paragraphs;
 }
 
 async function fetchArticleText(articleUrl) {
     if (!articleUrl) return "";
 
-    try {
-        const response = await fetch(articleUrl, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
-                "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8"
-            }
-        });
+    const candidateUrls = [];
+    const trimmed = articleUrl.trim();
+    if (trimmed) candidateUrls.push(trimmed);
 
-        if (!response.ok) return "";
+    const withoutProtocol = trimmed.replace(/^https?:\/\//, "");
+    if (withoutProtocol) {
+        candidateUrls.push(`https://r.jina.ai/http://${withoutProtocol}`);
+    }
 
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
+    for (const url of candidateUrls) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
+                    "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8"
+                }
+            });
 
-        const metaDescription =
-            doc.querySelector('meta[name="description"]')?.getAttribute("content") ||
-            doc.querySelector('meta[property="og:description"]')?.getAttribute("content") ||
-            "";
+            if (!response.ok) continue;
 
-        if (metaDescription && metaDescription.length > 40) {
-            return normalizeText(metaDescription);
-        }
+            const contentType = response.headers.get("content-type") || "";
+            const text = await response.text();
 
-        const candidateSelectors = [
-            "article p",
-            "main p",
-            ".article-body p",
-            ".article-content p",
-            "[data-testid='article-body'] p",
-            "p"
-        ];
+            if (!text || text.length < 40) continue;
 
-        let paragraphs = [];
-
-        for (const selector of candidateSelectors) {
-            const nodes = Array.from(doc.querySelectorAll(selector));
-            for (const node of nodes) {
-                const text = normalizeText(node.textContent || "");
-                if (text && text.length > 60 && !text.toLowerCase().includes("meld deg inn")) {
-                    paragraphs.push(text);
+            if (contentType.includes("application/json")) {
+                const parsed = JSON.parse(text);
+                if (parsed?.content) {
+                    return normalizeText(parsed.content).slice(0, 500);
                 }
             }
-            if (paragraphs.length > 0) break;
+
+            const directParagraphs = extractParagraphsFromHtml(text);
+            if (directParagraphs.length > 0) {
+                const joined = directParagraphs.slice(0, 4).join(" ");
+                return joined.slice(0, 500);
+            }
+
+            const cleaned = normalizeText(
+                text
+                    .replace(/[#>*_`\[\]()-]/g, " ")
+                    .replace(/\n+/g, " ")
+            );
+
+            if (cleaned.length > 120 && !isLikelyNoise(cleaned)) {
+                return cleaned.slice(0, 500);
+            }
+        } catch (error) {
+            console.warn("Klarte ikke hente artikkeltekst fra URL:", url, error);
         }
-
-        if (!paragraphs.length) {
-            return "";
-        }
-
-        return paragraphs
-            .slice(0, 4)
-            .join(" ")
-            .slice(0, 500);
-
-    } catch (error) {
-        return "";
     }
+
+    return "";
 }
 
 async function loadRSS() {
@@ -345,12 +389,13 @@ async function loadRSS() {
         let rawDesc =
             item.getElementsByTagName("description")[0]?.textContent || "";
 
-        rawDesc = cleanText(rawDesc);
+        rawDesc = normalizeText(rawDesc);
 
-        if (rawDesc && rawDesc.length > 30) {
-            rawDesc = normalizeText(rawDesc);
-        } else {
-            rawDesc = await fetchArticleText(articleUrl);
+        if (!rawDesc || rawDesc.length < 30 || rawDesc.endsWith("...")) {
+            const articleText = await fetchArticleText(articleUrl);
+            if (articleText && articleText.length > 30) {
+                rawDesc = articleText;
+            }
         }
 
         if (!rawDesc || rawDesc.length < 30) {
