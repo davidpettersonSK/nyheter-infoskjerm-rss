@@ -225,6 +225,74 @@ function cleanText(value) {
         .trim();
 }
 
+function normalizeText(value) {
+    return cleanText(value)
+        .replace(/\s*\.\.\.\s*$/g, "")
+        .trim();
+}
+
+async function fetchArticleText(articleUrl) {
+    if (!articleUrl) return "";
+
+    try {
+        const response = await fetch(articleUrl, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36",
+                "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8"
+            }
+        });
+
+        if (!response.ok) return "";
+
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const metaDescription =
+            doc.querySelector('meta[name="description"]')?.getAttribute("content") ||
+            doc.querySelector('meta[property="og:description"]')?.getAttribute("content") ||
+            "";
+
+        if (metaDescription && metaDescription.length > 40) {
+            return normalizeText(metaDescription);
+        }
+
+        const candidateSelectors = [
+            "article p",
+            "main p",
+            ".article-body p",
+            ".article-content p",
+            "[data-testid='article-body'] p",
+            "p"
+        ];
+
+        let paragraphs = [];
+
+        for (const selector of candidateSelectors) {
+            const nodes = Array.from(doc.querySelectorAll(selector));
+            for (const node of nodes) {
+                const text = normalizeText(node.textContent || "");
+                if (text && text.length > 60 && !text.toLowerCase().includes("meld deg inn")) {
+                    paragraphs.push(text);
+                }
+            }
+            if (paragraphs.length > 0) break;
+        }
+
+        if (!paragraphs.length) {
+            return "";
+        }
+
+        return paragraphs
+            .slice(0, 4)
+            .join(" ")
+            .slice(0, 500);
+
+    } catch (error) {
+        return "";
+    }
+}
+
 async function loadRSS() {
 
     const url =
@@ -269,14 +337,23 @@ async function loadRSS() {
             continue;
         }
 
+        const articleUrl =
+            item.getElementsByTagName("link")[0]?.textContent ||
+            item.getElementsByTagName("guid")[0]?.textContent ||
+            "";
+
         let rawDesc =
             item.getElementsByTagName("description")[0]?.textContent || "";
 
-        if (rawDesc) {
-            rawDesc = cleanText(rawDesc);
+        rawDesc = cleanText(rawDesc);
+
+        if (rawDesc && rawDesc.length > 30) {
+            rawDesc = normalizeText(rawDesc);
+        } else {
+            rawDesc = await fetchArticleText(articleUrl);
         }
 
-        if (rawDesc.length < 30) {
+        if (!rawDesc || rawDesc.length < 30) {
             continue;
         }
 
