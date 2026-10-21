@@ -16,34 +16,39 @@ body {
 
 .header {
     position: fixed;
-    top: 18px;
+    top: 12px;
     left: 50px;
-    margin: 0;
+    right: 50px;
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     z-index: 1000;
+    box-sizing: border-box;
 }
 
 .logo {
     display: block;
-    height: 100px;
+    height: 120px;
     width: auto;
     object-fit: contain;
-    z-index: 1000;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.08));
 }
+
 .image-container {
     width: 100%;
 }
 
 .clock {
-    position: fixed;
-    top: 20px;
-    right: 50px;
-    font-size: 32px;
-    font-weight: bold;
+    font-size: 42px;
+    font-weight: 700;
     color: #333333;
-    z-index: 1000;
     line-height: 1;
+    letter-spacing: 0.02em;
     display: flex;
     align-items: center;
+    justify-content: center;
+    min-width: 140px;
 }
 
 .slide {
@@ -158,9 +163,8 @@ body {
 
 <div class="header">
     <img src="Stavanger-Aftenblad.png" alt="Aftenbladet" class="logo">
+    <div id="clock" class="clock"></div>
 </div>
-
-<div id="clock" class="clock"></div>
 
 <div id="slides"></div>
 
