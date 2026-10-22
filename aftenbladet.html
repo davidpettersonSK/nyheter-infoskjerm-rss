@@ -251,8 +251,10 @@ async function loadRSS() {
 
         if (excluded) {
         continue;
-    }
-        
+        }
+        if (/\bBT\b/i.test(title + " " + desc)) {
+        continue;
+        }
         const wordCount =
             desc.trim().split(/\s+/).length;
 
