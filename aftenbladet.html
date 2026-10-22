@@ -202,6 +202,21 @@ async function loadRSS() {
     const url =
         "https://www.nrk.no/rogaland/siste.rss";
 
+        const excludedKeywords = [
+        "bjerkreim",
+        "eigersund",
+        "sokndal",
+        "lund",
+        "haugesund",
+        "karmøy",
+        "tysvær",
+        "vindafjord",
+        "sauda",
+        "suldal",
+        "dalane",
+        "haugalandet"
+    ];    
+    
     const response = await fetch(url);
     const text = await response.text();
 
@@ -225,6 +240,18 @@ async function loadRSS() {
         let desc =
             item.getElementsByTagName("description")[0]?.textContent || "";
 
+        const content =
+            (title + " " + desc).toLowerCase();
+
+        const excluded =
+            excludedKeywords.some(keyword =>
+            content.includes(keyword)
+            );
+
+        if (excluded) {
+        continue;
+    }
+        
         const wordCount =
             desc.trim().split(/\s+/).length;
 
