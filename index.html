@@ -218,9 +218,20 @@ async function loadRSS() {
         }
 
         const pubDate =
-            item.getElementsByTagName("pubDate")[0]?.textContent || "";
+    item.getElementsByTagName("pubDate")[0]?.textContent || "";
 
-        let formattedDate = "";
+if (pubDate) {
+
+    const articleDate = new Date(pubDate);
+    const now = new Date();
+
+    const ageHours =
+        (now - articleDate) / (1000 * 60 * 60);
+
+    if (ageHours > 12) {
+        continue;
+    }
+}
 
         if (pubDate) {
 
