@@ -301,27 +301,27 @@ if (pubDate) {
                 });
         }
 
-        if (desc.length > 400) {
+        if (desc.length > 600) {
 
-    const maxLength = 400;
+            const maxLength = 600;
 
-    let endPos = desc.indexOf(".", maxLength);
+            let endPos = desc.indexOf(".", maxLength);
 
-    // Godta punktum inntil 150 tegn etter grensen
-    if (endPos !== -1 && endPos <= maxLength + 150) {
+            // Godta punktum inntil 150 tegn etter grensen
+            if (endPos !== -1 && endPos <= maxLength + 150) {
+    
+            desc = desc.substring(0, endPos + 1);
 
-        desc = desc.substring(0, endPos + 1);
+            } else {
 
-    } else {
+            desc = desc.substring(0, maxLength);
 
-        desc = desc.substring(0, maxLength);
+            const lastSpace = desc.lastIndexOf(" ");
 
-        const lastSpace = desc.lastIndexOf(" ");
-
-        if (lastSpace > 0) {
-            desc = desc.substring(0, lastSpace);
-        }
-
+            if (lastSpace > 0) {
+                desc = desc.substring(0, lastSpace);
+            }
+    
         desc += "...";
     }
 }
