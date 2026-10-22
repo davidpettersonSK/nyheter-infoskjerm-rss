@@ -149,6 +149,16 @@ body {
     transition: width 1s linear;
 }
 
+.hero.no-image {
+    min-height: auto;
+}
+
+.hero.no-image .overlay {
+    position: static;
+    background: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
 </style>
 </head>
 
@@ -264,7 +274,7 @@ async function loadRSS() {
         slide.innerHTML = `
             <div class="card">
 
-                <div class="hero">
+                <div class="hero ${image ? '' : 'no-image'}">
 
                     ${image ? `<img class="image" src="${image}">` : ""}
 
