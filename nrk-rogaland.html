@@ -271,7 +271,7 @@ async function loadRSS() {
 
       const pubDate =
     item.getElementsByTagName("pubDate")[0]?.textContent || "";
-/*
+
 if (pubDate) {
 
     const articleDate = new Date(pubDate);
@@ -280,11 +280,11 @@ if (pubDate) {
     const ageHours =
         (now - articleDate) / (1000 * 60 * 60);
 
-    if (ageHours > 12) {
+    if (ageHours > 24) {
         continue;
     }
 }
-*/
+
 
         let formattedDate = "";
 
